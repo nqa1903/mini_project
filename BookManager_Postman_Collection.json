@@ -1,0 +1,201 @@
+{
+  "info": {
+    "name": "BookManager API",
+    "description": "Test collection cho BookManager RESTful API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "bookId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "TC-01: GET all books",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Response là Array', () => {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/books"
+      }
+    },
+    {
+      "name": "TC-02: POST create book",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "pm.test('Có id trong response', () => {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.id).to.be.a('number');",
+              "    // Lưu id để dùng ở các request tiếp theo",
+              "    pm.collectionVariables.set('bookId', json.id);",
+              "});",
+              "pm.test('title đúng', () => {",
+              "    pm.expect(pm.response.json().title).to.eql('Effective Java');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Effective Java\",\n  \"author\": \"Joshua Bloch\",\n  \"price\": 30.5\n}"
+        },
+        "url": "{{baseUrl}}/api/books"
+      }
+    },
+    {
+      "name": "TC-03: GET book by ID (tồn tại)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('ID khớp', () => {",
+              "    const id = parseInt(pm.collectionVariables.get('bookId'));",
+              "    pm.expect(pm.response.json().id).to.eql(id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/books/{{bookId}}"
+      }
+    },
+    {
+      "name": "TC-04: GET book by ID (không tồn tại → 404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 404', () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/books/99999"
+      }
+    },
+    {
+      "name": "TC-05: PUT update book (toàn bộ)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('title đã thay đổi', () => {",
+              "    pm.expect(pm.response.json().title).to.eql('Java Concurrency In Practice');",
+              "});",
+              "pm.test('price đã thay đổi', () => {",
+              "    pm.expect(pm.response.json().price).to.eql(35.0);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Java Concurrency In Practice\",\n  \"author\": \"Brian Goetz\",\n  \"price\": 35.0\n}"
+        },
+        "url": "{{baseUrl}}/api/books/{{bookId}}"
+      }
+    },
+    {
+      "name": "TC-06: PATCH update price only",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('price đã cập nhật', () => {",
+              "    pm.expect(pm.response.json().price).to.eql(40.0);",
+              "});",
+              "pm.test('title KHÔNG thay đổi', () => {",
+              "    pm.expect(pm.response.json().title).to.eql('Java Concurrency In Practice');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 40.0\n}"
+        },
+        "url": "{{baseUrl}}/api/books/{{bookId}}"
+      }
+    },
+    {
+      "name": "TC-07: DELETE book",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 204', () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/api/books/{{bookId}}"
+      }
+    },
+    {
+      "name": "TC-08: DELETE lần 2 (đã xóa → 404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 404', () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/api/books/{{bookId}}"
+      }
+    }
+  ]
+}
